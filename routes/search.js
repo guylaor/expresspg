@@ -1,16 +1,13 @@
 var express = require('express');
 var router = express.Router();
 var MongoClient = require('mongodb').MongoClient;
-
+var assert = require('assert');
 // Connection URL. This is where your mongodb server is running.
 var url = 'mongodb://localhost:27017/pg';
 var data = [];
 
 
-
-router.use(function(req, res, next) {
-  // .. some logic here .. like any other middleware
-
+/*
   var find_obj = {}
   if ( typeof req.query.state === "undefined") {
     find_obj = { "state": "NY" }
@@ -54,20 +51,44 @@ router.use(function(req, res, next) {
       console.log("finished mongo");
     }
   });
+*/
 
+var findRestaurants = function(db, find_obj, callback) {
+   var cursor =db.collection('yelp').find( find_obj, {"web_text":0} );
+   cursor.sort({name: 1});
+   cursor.limit(50);
 
-
-  next();
-});
+   cursor.each(function(err, doc) {
+      assert.equal(err, null);
+      if (doc != null) {
+         data.push(doc);
+         console.dir(doc);
+      } else {
+         callback();
+      }
+   });
+};
 
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
+  data = [];
+  var find_obj = {}
+  if ( typeof req.query.state === "undefined") {
+    find_obj = { "state": "NY" }
+  } else {
+    find_obj = { "state": req.query.state }
+  }
 
+  MongoClient.connect(url, function(err, db) {
+   assert.equal(null, err);
+   findRestaurants(db, find_obj, function() {
+       db.close();
+       res.render('search', { title: 'Express', _data: data });
+   });
+ });
 
-  console.log("than this second");
-
-        res.render('search', { title: 'Express', _data: data });
+      //  res.render('search', { title: 'Express', _data: data });
 });
 
 module.exports = router;
