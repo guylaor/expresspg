@@ -10,6 +10,7 @@ require('dotenv').load();
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var search = require('./routes/search');
 
 var app = express();
 
@@ -40,6 +41,7 @@ passport.use(new BasicStrategy(
 
 app.use('/', passport.authenticate('basic', { session: false }), routes);
 app.use('/users', passport.authenticate('basic', { session: false }), users);
+app.use('/search', passport.authenticate('basic', { session: false }), search);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
